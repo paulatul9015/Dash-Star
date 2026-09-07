@@ -189,12 +189,12 @@ export const ArchitectureLabModal: React.FC<ArchitectureLabModalProps> = ({
                     <span className="text-[10px] font-black uppercase text-amber-600 block mb-1">
                       2. AI & ML Pipeline
                     </span>
-                    <h4 className="font-bold text-slate-900 text-sm mb-2">Gemini 2.5 Flash SDK</h4>
+                    <h4 className="font-bold text-slate-900 text-sm mb-2">Gemini 3.8 Flash & Supabase pgvector</h4>
                     <ul className="text-xs text-slate-600 space-y-1">
-                      <li>• StarBot Shopping Advisor</li>
-                      <li>• NLP Semantic Product Search</li>
-                      <li>• Aspect Sentiment Analysis</li>
-                      <li>• Automated Product Metadata</li>
+                      <li>• Supabase pgvector 768-dim HNSW indexing</li>
+                      <li>• LLM Query Parsing (Color, Price, Category)</li>
+                      <li>• Hybrid Search (Vector Cosine + SQL Filtering)</li>
+                      <li>• Aspect-based Customer Review Mining</li>
                     </ul>
                   </div>
 
@@ -202,12 +202,12 @@ export const ArchitectureLabModal: React.FC<ArchitectureLabModalProps> = ({
                     <span className="text-[10px] font-black uppercase text-emerald-600 block mb-1">
                       3. Data & Persistence
                     </span>
-                    <h4 className="font-bold text-slate-900 text-sm mb-2">Express + Firestore / Cloud SQL</h4>
+                    <h4 className="font-bold text-slate-900 text-sm mb-2">Supabase pgvector & Cloud SQL / Firestore</h4>
                     <ul className="text-xs text-slate-600 space-y-1">
-                      <li>• Real-time stock velocity</li>
-                      <li>• Product catalog & reviews</li>
-                      <li>• Customer RFM clustering</li>
-                      <li>• BIS certification records</li>
+                      <li>• pgvector vector(768) embeddings column</li>
+                      <li>• hybrid_search_products stored procedure</li>
+                      <li>• Real-time stock velocity & customer reviews</li>
+                      <li>• Customer RFM clustering & BIS records</li>
                     </ul>
                   </div>
 

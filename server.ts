@@ -3,6 +3,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
 import { createServer as createViteServer } from 'vite';
+import { executeHybridSearch, StructuredFilters, getSupabaseClient } from './src/server/supabaseVectorService';
 
 dotenv.config();
 
@@ -49,18 +50,18 @@ Company & Product Knowledge:
 - Certifications: ISO 9001:2015 certified, Bureau of Indian Standards (BIS IS 9873 compliant), non-toxic virgin ABS/PP plastics.
 - Phones: +91-9599811712, +91-9599811713, Email: sales.dashstar@gmail.com
 - Catalog Products (IDs and details):
-  1. ID: "prod-001" | Name: DUCATTI | Category: EV | ₹5,630 | 12V Superbike, age 3-8, training wheels, engine sounds, LED lights, dual motor.
-  2. ID: "prod-002" | Name: HUMR EV | Category: EV | ₹3,965 | 12V 4x4 Off-roader Jeep, age 2-7, 2.4G parental remote + manual pedal.
-  3. ID: "prod-003" | Name: BUNNY | Category: Ride Ons | ₹2,365 | Magic Swing/Twist Car, age 1.5-5, no battery/pedals needed, silent PU wheels, 65kg payload.
-  4. ID: "prod-004" | Name: SMART | Category: Ride Ons | ₹2,655 | 3-in-1 Push Ride-On & Stroller, age 1-4, parent steering handle, guard rail.
-  5. ID: "prod-005" | Name: NODDY | Category: Scooters | ₹2,275 | Foldable Kick Scooter with LED flashing PU wheels, age 3-7, adjustable T-bar.
-  6. ID: "prod-006" | Name: RANGER | Category: Scooters | ₹3,038 | Pro Urban Scooter with dual suspension & disc brake, age 5-12, 100kg weight limit.
-  7. ID: "prod-007" | Name: VICTOR | Category: Trikes | ₹2,595 | Canopy Steering Trike with UV sunshade, EVA silent tyres, age 1.5-4.
-  8. ID: "prod-008" | Name: APACHE | Category: Trikes | ₹2,210 | Heavy-Duty Military Trike with rear tipper bucket, age 2-5.
-  9. ID: "prod-009" | Name: GT EV | Category: EV | ₹3,810 | Super Sportster with scissor butterfly doors, age 2-6, LED dashboard.
-  10. ID: "prod-010" | Name: JEEP EV | Category: EV | ₹3,990 | Sahara 4x4 Off-roader with roof spotlight rack, age 3-8.
-  11. ID: "prod-011" | Name: PANDA | Category: Walkers | ₹1,850 | Musical baby walker with 3-position height adjust & meal tray, age 6-18 months.
-  12. ID: "prod-012" | Name: TITAN | Category: Trikes | ₹3,450 | 360° Reversible Stroller Trike with push bar, age 1-5.
+  1. ID: "ducatti-01" | Name: DUCATTI | Category: EV | ₹5,630 | 12V Superbike, age 3-8, training wheels, engine sounds, LED lights, dual motor.
+  2. ID: "humr-ev-02" | Name: HUMR EV | Category: EV | ₹3,965 | 12V 4x4 Off-roader Jeep, age 2-7, 2.4G parental remote + manual pedal.
+  3. ID: "bunny-03" | Name: BUNNY | Category: Ride Ons | ₹2,365 | Magic Swing/Twist Car, age 1.5-5, no battery/pedals needed, silent PU wheels, 65kg payload.
+  4. ID: "smart-04" | Name: SMART | Category: Ride Ons | ₹2,655 | 3-in-1 Push Ride-On & Stroller, age 1-4, parent steering handle, guard rail.
+  5. ID: "noddy-05" | Name: NODDY | Category: Scooters | ₹2,275 | Foldable Kick Scooter with LED flashing PU wheels, age 3-7, adjustable T-bar.
+  6. ID: "ranger-06" | Name: RANGER | Category: Scooters | ₹3,038 | Pro Urban Scooter with dual suspension & disc brake, age 5-12, 100kg weight limit.
+  7. ID: "victor-07" | Name: VICTOR | Category: Trikes | ₹2,595 | Canopy Steering Trike with UV sunshade, EVA silent tyres, age 1.5-4.
+  8. ID: "apache-08" | Name: APACHE | Category: Trikes | ₹2,210 | Heavy-Duty Military Trike with rear tipper bucket, age 2-5.
+  9. ID: "gt-ev-09" | Name: GT EV | Category: EV | ₹3,810 | Super Sportster with scissor butterfly doors, age 2-6, LED dashboard.
+  10. ID: "jeep-ev-10" | Name: JEEP EV | Category: EV | ₹3,990 | Sahara 4x4 Off-roader with roof spotlight rack, age 3-8.
+  11. ID: "panda-11" | Name: PANDA | Category: Walkers | ₹1,850 | Musical baby walker with 3-position height adjust & meal tray, age 6-18 months.
+  12. ID: "titan-12" | Name: TITAN | Category: Trikes | ₹3,450 | 360° Reversible Stroller Trike with push bar, age 1-5.
 
 Guidelines:
 - Give fresh, direct, friendly, and comprehensive answers tailored directly to what the customer asks.
@@ -85,7 +86,7 @@ Guidelines:
     ];
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
+      model: 'gemini-3.8-flash',
       contents: chatMessages as any,
       config: {
         systemInstruction: systemPrompt,
@@ -98,20 +99,20 @@ Guidelines:
     // Extract matched product IDs
     const matchedProducts: string[] = [];
     const lower = (replyText + ' ' + message).toLowerCase();
-    if (lower.includes('ducatti') || lower.includes('superbike') || lower.includes('bike')) matchedProducts.push('prod-001');
+    if (lower.includes('ducatti') || lower.includes('superbike') || lower.includes('bike')) matchedProducts.push('ducatti-01');
     if (lower.includes('humr') || lower.includes('hummer') || lower.includes('jeep') || lower.includes('sahara')) {
-      if (lower.includes('sahara')) matchedProducts.push('prod-010');
-      else matchedProducts.push('prod-002');
+      if (lower.includes('sahara') || lower.includes('jeep ev')) matchedProducts.push('jeep-ev-10');
+      else matchedProducts.push('humr-ev-02');
     }
-    if (lower.includes('bunny') || lower.includes('swing') || lower.includes('twist')) matchedProducts.push('prod-003');
-    if (lower.includes('smart') || lower.includes('push car') || lower.includes('stroller car')) matchedProducts.push('prod-004');
-    if (lower.includes('noddy') || lower.includes('kick scooter') || lower.includes('foldable scooter')) matchedProducts.push('prod-005');
-    if (lower.includes('ranger') || lower.includes('disc brake') || lower.includes('suspension')) matchedProducts.push('prod-006');
-    if (lower.includes('victor') || lower.includes('canopy')) matchedProducts.push('prod-007');
-    if (lower.includes('apache') || lower.includes('military') || lower.includes('tipper')) matchedProducts.push('prod-008');
-    if (lower.includes('gt ev') || lower.includes('sportster') || lower.includes('scissor door')) matchedProducts.push('prod-009');
-    if (lower.includes('panda') || lower.includes('walker') || lower.includes('baby walker')) matchedProducts.push('prod-011');
-    if (lower.includes('titan') || lower.includes('360')) matchedProducts.push('prod-012');
+    if (lower.includes('bunny') || lower.includes('swing') || lower.includes('twist')) matchedProducts.push('bunny-03');
+    if (lower.includes('smart') || lower.includes('push car') || lower.includes('stroller car')) matchedProducts.push('smart-04');
+    if (lower.includes('noddy') || lower.includes('kick scooter') || lower.includes('foldable scooter')) matchedProducts.push('noddy-05');
+    if (lower.includes('ranger') || lower.includes('disc brake') || lower.includes('suspension')) matchedProducts.push('ranger-06');
+    if (lower.includes('victor') || lower.includes('canopy')) matchedProducts.push('victor-07');
+    if (lower.includes('apache') || lower.includes('military') || lower.includes('tipper')) matchedProducts.push('apache-08');
+    if (lower.includes('gt ev') || lower.includes('sportster') || lower.includes('scissor door')) matchedProducts.push('gt-ev-09');
+    if (lower.includes('panda') || lower.includes('walker') || lower.includes('baby walker')) matchedProducts.push('panda-11');
+    if (lower.includes('titan') || lower.includes('360')) matchedProducts.push('titan-12');
 
     res.json({
       reply: replyText,
@@ -126,82 +127,138 @@ Guidelines:
   }
 });
 
-// 2. AI Semantic & Visual Query Parser
+// 2. AI Semantic & Hybrid Search: LLM Query Parsing + Supabase pgvector
 app.post('/api/ai/semantic-search', async (req, res) => {
   try {
     const { query } = req.body;
-    if (!query) {
+    if (!query || typeof query !== 'string') {
       return res.status(400).json({ error: 'Search query is required' });
     }
 
     const ai = getGenAI();
-    const prompt = `You are the NLP search parser for Dash Star toy ecommerce.
-Parse this natural language search query: "${query}"
+
+    // Stage 1: LLM Natural Language Query Parser (Extracts structured filters)
+    const prompt = `You are the specialized NLP Query Parser for Dash Star kids' ride-on toys ecommerce.
+The customer typed this natural language search: "${query}"
+
 Available Categories: ["Cars", "EV", "Ride Ons", "Scooters", "Trikes", "Walkers"]
-Extract structured filters and provide an intent summary.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            category: {
-              type: Type.STRING,
-              description: 'One of: Cars, EV, Ride Ons, Scooters, Trikes, Walkers or null if not specified',
+Extract exact structured filters for SQL WHERE conditions, plus a semantic embedding prompt:
+- category: The exact category ("Cars", "EV", "Ride Ons", "Scooters", "Trikes", "Walkers") or null if unspecified.
+- maxPrice: Maximum price budget in INR (₹) or null.
+- minPrice: Minimum price budget in INR (₹) or null.
+- color: Specific color keyword (e.g. "red", "yellow", "blue", "pink", "black", "green") or null.
+- ageGroup: Age bracket (e.g. "3-5 years", "1-4 years") or null.
+- features: Array of specific functional features (e.g. ["parental remote", "led wheels", "training wheels", "canopy", "dual motor"]).
+- semanticSearchPrompt: A rich, descriptive semantic summary of the desired toy to compute vector cosine distance against product embeddings.
+- reasoning: A crisp 1-2 sentence human-readable explanation of how the query was parsed and which filters were activated.`;
+
+    let structuredFilters: StructuredFilters;
+
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-3.8-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              category: {
+                type: Type.STRING,
+                description: 'One of: Cars, EV, Ride Ons, Scooters, Trikes, Walkers, or null',
+              },
+              maxPrice: {
+                type: Type.NUMBER,
+                description: 'Maximum budget in INR (₹) or null',
+              },
+              minPrice: {
+                type: Type.NUMBER,
+                description: 'Minimum budget in INR (₹) or null',
+              },
+              color: {
+                type: Type.STRING,
+                description: 'Color keyword e.g. "red", "blue" or null',
+              },
+              ageGroup: {
+                type: Type.STRING,
+                description: 'Age range extracted or null',
+              },
+              features: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: 'Array of extracted feature requirements',
+              },
+              semanticSearchPrompt: {
+                type: Type.STRING,
+                description: 'Refined descriptive prompt for vector embedding model',
+              },
+              reasoning: {
+                type: Type.STRING,
+                description: 'Crisp explanation of parsed intent and filters',
+              },
             },
-            maxPrice: {
-              type: Type.NUMBER,
-              description: 'Maximum budget in INR (₹) or null',
-            },
-            minPrice: {
-              type: Type.NUMBER,
-              description: 'Minimum budget in INR (₹) or null',
-            },
-            ageGroup: {
-              type: Type.STRING,
-              description: 'Age range extracted, e.g. "3-5 years" or null',
-            },
-            color: {
-              type: Type.STRING,
-              description: 'Color keyword e.g. "red", "pink", "blue" or null',
-            },
-            features: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: 'Key features desired like ["remote control", "led lights", "battery", "foldable"]',
-            },
-            intentSummary: {
-              type: Type.STRING,
-              description: 'A crisp one-sentence explanation of what the customer is searching for and why certain products fit.',
-            },
-            matchedKeywords: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-            },
+            required: ['semanticSearchPrompt', 'reasoning'],
           },
-          required: ['intentSummary'],
         },
-      },
-    });
+      });
 
-    const parsed = JSON.parse(response.text || '{}');
-    res.json({ result: parsed });
+      const parsed = JSON.parse(response.text || '{}');
+      structuredFilters = {
+        category: parsed.category || null,
+        maxPrice: typeof parsed.maxPrice === 'number' ? parsed.maxPrice : null,
+        minPrice: typeof parsed.minPrice === 'number' ? parsed.minPrice : null,
+        color: parsed.color || null,
+        ageGroup: parsed.ageGroup || null,
+        features: Array.isArray(parsed.features) ? parsed.features : [],
+        semanticSearchPrompt: parsed.semanticSearchPrompt || query,
+        reasoning: parsed.reasoning || `Extracted semantic intent for: "${query}"`,
+      };
+    } catch (llmErr) {
+      console.warn('LLM parsing fallback engaged:', llmErr);
+      const q = query.toLowerCase();
+      structuredFilters = {
+        category: q.includes('car') ? 'Cars' : q.includes('ev') || q.includes('electric') || q.includes('bike') ? 'EV' : q.includes('scooter') ? 'Scooters' : q.includes('trike') ? 'Trikes' : q.includes('walker') ? 'Walkers' : null,
+        maxPrice: q.includes('3000') ? 3000 : q.includes('4000') ? 4000 : q.includes('5000') ? 5000 : q.includes('6000') ? 6000 : null,
+        minPrice: null,
+        color: q.includes('red') ? 'red' : q.includes('pink') ? 'pink' : q.includes('blue') ? 'blue' : q.includes('yellow') ? 'yellow' : null,
+        ageGroup: null,
+        features: [],
+        semanticSearchPrompt: query,
+        reasoning: `Rule-based filter extraction for "${query}"`,
+      };
+    }
+
+    // Stage 2: Hybrid Search combining Vector Similarity & SQL Filtering
+    const hybridResponse = await executeHybridSearch(query, structuredFilters, ai);
+
+    res.json(hybridResponse);
   } catch (error: any) {
     console.error('Semantic search error:', error);
-    // Fallback rule-based parsing
-    const q = (req.body.query || '').toLowerCase();
-    res.json({
-      result: {
-        intentSummary: `Parsed search for "${req.body.query}" with keyword matching.`,
-        category: q.includes('car') ? 'Cars' : q.includes('ev') || q.includes('electric') || q.includes('bike') ? 'EV' : q.includes('scooter') ? 'Scooters' : q.includes('trike') ? 'Trikes' : q.includes('walker') ? 'Walkers' : undefined,
-        maxPrice: q.includes('3000') ? 3000 : q.includes('4000') ? 4000 : q.includes('5000') ? 5000 : undefined,
-        color: q.includes('red') ? 'red' : q.includes('pink') ? 'pink' : q.includes('blue') ? 'blue' : undefined,
-      },
+    res.status(500).json({
+      error: 'Failed to process semantic search',
+      details: error.message,
     });
   }
+});
+
+// Supabase pgvector Connection & Schema Status
+app.get('/api/ai/supabase-status', (req, res) => {
+  const supabase = getSupabaseClient();
+  const url = process.env.SUPABASE_URL || '';
+
+  res.json({
+    connected: Boolean(supabase),
+    configured: Boolean(url),
+    supabaseUrl: url ? url.replace(/(https?:\/\/)([^@]+@)?([^\/]+).*/, '$1$3') : null,
+    vectorDimensions: 768,
+    pgvectorExtension: 'vector',
+    targetTable: 'products',
+    hnswIndex: 'products_embedding_hnsw_idx',
+    rpcFunction: 'hybrid_search_products',
+    embeddingModel: 'gemini-embedding-2-preview',
+    localFallbackReady: true,
+  });
 });
 
 // 3. AI Review Sentiment & Aspect-Based Opinion Mining
@@ -217,7 +274,7 @@ Review Text: "${reviewText}"
 Provide fine-grained aspect sentiment analysis across Battery Life, Assembly Ease, Durability/Safety, and Fun Factor.`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
+      model: 'gemini-3.8-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -277,7 +334,7 @@ Generate:
 6. Alt-text for image accessibility`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3.7-flash',
+      model: 'gemini-3.8-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -343,3 +400,4 @@ async function startServer() {
 }
 
 startServer();
+
