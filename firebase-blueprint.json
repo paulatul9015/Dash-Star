@@ -1,0 +1,84 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile containing basic public info and account metadata.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Unique auth UID of the user." },
+        "displayName": { "type": "string", "description": "Display name of the user.", "maxLength": 100 },
+        "email": { "type": "string", "description": "User email address.", "maxLength": 150 },
+        "photoURL": { "type": "string", "description": "User profile avatar image URL." },
+        "createdAt": { "type": "string", "description": "ISO timestamp of user creation." },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update." }
+      },
+      "required": ["userId", "email"]
+    },
+    "WishlistItem": {
+      "title": "WishlistItem",
+      "description": "Product saved to user's personal wishlist.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Product ID or unique wishlist item ID." },
+        "userId": { "type": "string", "description": "Owner user UID." },
+        "productId": { "type": "string", "description": "ID of the product wishlisted." },
+        "productName": { "type": "string", "description": "Name of the product.", "maxLength": 150 },
+        "productPrice": { "type": "number", "description": "Price of the product." },
+        "productImage": { "type": "string", "description": "Image URL of the product." },
+        "productCategory": { "type": "string", "description": "Category of the product." },
+        "addedAt": { "type": "string", "description": "ISO timestamp when item was added." }
+      },
+      "required": ["userId", "productId"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Customer product review and rating.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique review ID." },
+        "productId": { "type": "string", "description": "ID of the product being reviewed." },
+        "userId": { "type": "string", "description": "UID of the reviewer." },
+        "userName": { "type": "string", "description": "Name of the reviewer.", "maxLength": 100 },
+        "rating": { "type": "number", "description": "Rating score between 1 and 5." },
+        "title": { "type": "string", "description": "Headline of the review.", "maxLength": 200 },
+        "comment": { "type": "string", "description": "Text review content.", "maxLength": 2000 },
+        "verifiedPurchase": { "type": "boolean", "description": "Whether user purchased this toy." },
+        "createdAt": { "type": "string", "description": "ISO timestamp of the review." }
+      },
+      "required": ["productId", "userId", "userName", "rating", "comment"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer completed order for verification.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique order ID." },
+        "userId": { "type": "string", "description": "User UID who placed the order." },
+        "orderNumber": { "type": "string", "description": "Dash Star order tracking number." },
+        "productIds": { "type": "array", "description": "List of product IDs in this order." },
+        "totalAmount": { "type": "number", "description": "Total order amount in INR." },
+        "status": { "type": "string", "description": "Order status e.g. confirmed, dispatched, delivered." },
+        "createdAt": { "type": "string", "description": "ISO timestamp of the order." }
+      },
+      "required": ["userId", "productIds", "totalAmount"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document."
+    },
+    "/users/{userId}/wishlist/{wishlistId}": {
+      "schema": "WishlistItem",
+      "description": "Subcollection of wishlist items saved by the user."
+    },
+    "/users/{userId}/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Subcollection of user orders."
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Public customer product reviews."
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Dash Star - AI-Powered Kids Ride-On Toys Store",
+  "description": "Next-generation ecommerce platform for kids' ride-on toys, EVs, scooters, trikes, and walkers featuring AI semantic search, intelligent shopping assistant, demand forecasting, and complete architecture blueprint.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
